@@ -1,0 +1,90 @@
+{
+	path:Halloween Night
+	level:4
+	order:0
+	required_songs:none
+}
+{
+	path:Yankee Machine Gun
+	level:4
+	order:1
+	required_songs:none
+}
+{
+	path:Kimi Dake ga Akimeiteita
+	level:4
+	order:2
+	required_songs:none
+}
+{
+	path:Majisuka Gakuen 5 Theme
+	level:5
+	order:1
+	required_songs:Yankee Machine Gun
+}
+{
+	path:Bokutachi wa Tatakawanai
+	level:6
+	order:1
+	required_songs:none
+}
+{
+	path:Escape
+	level:6
+	order:0
+	required_songs:none
+}
+{
+	path:overture
+	level:1
+	order:0
+	required_songs:none
+}
+{
+	path:47 Suteki na Machi e
+	level:0
+	order:0
+	required_songs:none
+}
+{
+	path:Kimi Dake ni Chu! Chu! Chu!
+	level:0
+	order:1
+	required_songs:none
+}
+{
+	path:Reborn
+	level:0
+	order:2
+	required_songs:none
+}
+{
+	path:Kegarete iru Shinjitsu
+	level:1
+	order:1
+	required_songs:47 Suteki na Machi e,Kimi Dake ni Chu! Chu! Chu!,Reborn
+}
+{
+	path:Summer side
+	level:2
+	order:0
+	required_songs:Kegarete iru Shinjitsu
+}
+{
+	path:Kafka to Dendenmu Chu!
+	level:2
+	order:1
+	required_songs:Kegarete iru Shinjitsu
+}
+{
+	path:Oshiete Mommy
+	level:2
+	order:2
+	required_songs:Kegarete iru Shinjitsu
+}
+{
+	path:Sailor Zombie
+	level:3
+	order:1
+	required_songs:Summer side,Kafka to Dendenmu Chu!,Oshiete Mommy
+}
