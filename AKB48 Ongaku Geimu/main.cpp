@@ -20,12 +20,47 @@
 //helper function, argument format: original string (input), delimiter, output string vector
 void split(const std::string& s, char delim, std::vector<std::string>& v);
 
+//helper function, returns a list of the initial members of a team
+std::deque<std::string> getInitialTeam(std::string name) {
+	std::deque<std::string> team;
+	if (name == "A") {
+		team.push_back("takahashi_juri.dat");
+		team.push_back("takahashi_juri.dat");
+		team.push_back("takahashi_juri.dat");
+		team.push_back("takahashi_juri.dat");
+		team.push_back("takahashi_juri.dat");
+	}
+	else if (name == "K") {
+		team.push_back("tano_yuka.dat");
+		team.push_back("abe_maria.dat");
+		team.push_back("aigasa_moe.dat");
+		team.push_back("shinozaki_ayana.dat");
+		team.push_back("mogi_shinobu.dat");
+	}
+	else if (name == "B") {
+		team.push_back("takahashi_juri.dat");
+		team.push_back("takahashi_juri.dat");
+		team.push_back("takahashi_juri.dat");
+		team.push_back("takahashi_juri.dat");
+		team.push_back("takahashi_juri.dat");
+	}
+	else if (name == "4") {
+		team.push_back("takahashi_juri.dat");
+		team.push_back("okada_nana.dat");
+		team.push_back("kojima_mako.dat");
+		team.push_back("nishino_miki.dat");
+		team.push_back("omori_miyu.dat");
+	}
+	return team;
+}
+
 class Stage;
+class Profile;
 
 int loading_screen(std::string name);
 int create_profile();
 int song_selection(std::string reason);
-int song_battle(Stage * stg, Stage * mStg);
+int song_battle(Profile * profile, Stage * stg, Stage * mStg);
 int song_maker(std::string name);
 
 sf::RenderWindow window;
@@ -82,7 +117,7 @@ public:
 	Character() {
 
 	}
-	Character(std::string first, std::string last, std::string nick, std::string tm, std::string rnk, std::string pre, std::string suf, int lvl, int exp) {
+	Character(std::string first, std::string last, std::string nick, std::string tm, std::string rnk, std::string pre, std::string suf, int lvl, int exp, bool u) {
 		firstName = first;
 		lastName = last;
 		nickname = nick;
@@ -92,8 +127,19 @@ public:
 		suffix = suf;
 		level = lvl;
 		experience = exp;
+		unlocked = u;
+		stageSongPath = "";
+		infoPath = "";
+		imagePath = "";
 	}
+	
 	//getters
+	std::string getInfoPath() {
+		return infoPath;
+	}
+	std::string getImagePath() {
+		return imagePath;
+	}
 	std::string getName() { //japanese naming convention
 		return lastName + " " + firstName;
 	}
@@ -124,7 +170,20 @@ public:
 	int getExp() {
 		return experience;
 	}
+	bool getUnlocked() {
+		return unlocked;
+	}
+	std::string getStageSongPath() {
+		return stageSongPath;
+	}
+
 	//setters
+	void setInfoPath(std::string i) {
+		infoPath = i;
+	}
+	void setImagePath(std::string i) {
+		imagePath = i;
+	}
 	void setFirstName(std::string f) {
 		firstName = f;
 	}
@@ -146,21 +205,29 @@ public:
 	void setSuffix(std::string s) {
 		suffix = s;
 	}
-	int setLevel(int l) {
+	void setLevel(int l) {
 		level = l;
 	}
-	int setExp(int e) {
+	void setExp(int e) {
 		experience = e;
 	}
-	int incExp(int a) {
+	void incExp(int a) {
 		experience += a;
 	}
-	int levelUp() {
+	void levelUp() {
 		level += 1;
 		experience = 0;
 		//do checks for unlocking stuff when level up
 	}
+	void setUnlocked(bool u) {
+		unlocked = u;
+	}
+	void setStageSongPath(std::string s) {
+		stageSongPath = s;
+	}
 private:
+	std::string infoPath;
+	std::string imagePath;
 	std::string firstName;
 	std::string lastName;
 	std::string nickname;
@@ -171,6 +238,8 @@ private:
 	std::string suffix; // <basic>, EX, SP
 	int level;
 	int experience;
+	bool unlocked;
+	std::string stageSongPath;
 	/* not yet implemented
 	smart
 	cute
@@ -190,32 +259,33 @@ public:
 	std::string getTeamName() {
 		return teamName;
 	}
-	Character * getActiveTeam() {
-		return activeTeam; //returns pointer to the array starting at the first element
+	std::deque<Character> * getActiveTeam() {
+		return &activeTeam;
 	}
-	std::deque<Character> getInactiveTeam() {
-		return inactiveTeam;
+	std::deque<Character> * getInactiveTeam() {
+		return &inactiveTeam;
 	}
-	std::unordered_map<std::string, Character> getInactiveTeamList() {
-		return inactiveTeamList;
+	std::unordered_map<std::string, Character> * getInactiveTeamList() {
+		return &inactiveTeamList;
 	}
-	Character getCaptain() {
-		return captain;
+	Character * getCaptain() {
+		return &captain;
 	}
 
 	//setters
 	void setTeamName(std::string tn) {
 		teamName = tn;
 	}
-	void setActiveTeam(Character aTeam[5]) {
-		for (int i = 0; i < 5; i++) {
-			activeTeam[i] = aTeam[i];
-		}
+	void setActiveTeam(std::deque<Character> aTeam) {
+		activeTeam = aTeam;
 	}
-	void setActiveTeam(int i, Character c) {
+	void addActiveChar(Character c) {
+		activeTeam.push_back(c);
+	}
+	void addActiveChar(int i, Character c) {
 		activeTeam[i] = c;
 	}
-	void setInactiveTeam(Character c) {
+	void addInactiveChar(Character c) {
 		inactiveTeam.push_back(c);
 		inactiveTeamList[c.getName()] = c;
 	}
@@ -225,7 +295,7 @@ public:
 	
 private:
 	std::string teamName;
-	Character activeTeam [5]; //the 5 characters that are used during stage battles
+	std::deque<Character> activeTeam; //the characters that are used during stage battles
 	std::deque<Character> inactiveTeam; //all the other characters not used during stage battles
 	std::unordered_map<std::string, Character> inactiveTeamList;
 	Character captain; //pointer to the captain of the team
@@ -240,21 +310,50 @@ public:
 	}
 	Profile(std::string pn) {
 		playerName = pn;
+		money = 0.0;
+	}
+	Profile(std::string pn, Team tm) {
+		playerName = pn;
+		team = tm;
+		money = 0.0;
+	}
+	Profile(std::string pn, Team tm, float m) {
+		playerName = pn;
+		team = tm;
+		money = m;
 	}
 
 	//getters
-	Team getTeam() {
-		return team;
+	std::string getPlayerName() {
+		return playerName;
+	}
+	//returns the address of the team
+	Team *getTeam() {
+		return &team;
+	}
+	float getMoney() {
+		return money;
 	}
 
 	//setters
 	void setPlayerName(std::string pn) {
 		playerName = pn;
 	}
+	//sets team pointer to the address of the parameter
+	void setTeam(Team t) {
+		team = t;
+	}
+	void setMoney(float m) {
+		money = m;
+	}
+	void incMoney(float m) {
+		money += m;
+	}
 
 private:
 	std::string playerName;
 	Team team;
+	float money;
 };
 
 class Stage {
@@ -1197,10 +1296,16 @@ int create_profile() {
 							std::ofstream file;
 							file.open("profile.dat");
 							file << "playerName:" << nameInputString << "\n";
+							file << "money:0\n"; //debug
 							file << "teamName:" << teamNames[i] << "\n";
-							file << "active:\n";
-							file << "inactive:\n";
-							file << "captain:";
+							file << "active:\n{\n";
+							std::deque<std::string> charList = getInitialTeam(teamNames[i]); //get the initial characters in the team
+							for (int i = 0; i < charList.size(); i++) {
+								file << "\t" << charList[i] << "\n";
+							}
+							file << "}\n";
+							file << "inactive:\n{\n}\n";
+							file << "captain:" << charList[0];
 							file.close();
 
 							return 0; //return to song selection
@@ -1311,17 +1416,226 @@ int create_profile() {
 }
 
 int song_selection(std::string reason) {
-	//load user profile
-	std::ifstream profileFile;
-	profileFile.open("profile.dat");
-	if (profileFile.is_open()) {
-	}
-	else {
-		//if user profile doesn't exist and we're in song selection for a stage battle, take player to profile creation screen
-		if (reason == "battle") {
-			create_profile();
+	//character database
+	std::unordered_map<std::string, Character> charMap;
+
+	//load character database
+	std::ifstream metaCharFile;
+	metaCharFile.open("characters/character_database.dat");
+	std::string metaCharLine;
+
+	if (metaCharFile.is_open()) {
+		const std::string delimiter = ":";
+
+		std::string folderPath = "";
+		std::string infoPath = "";
+		std::string imagePath = "";
+		std::string stageSongPath = "";
+
+		while (std::getline(metaCharFile, metaCharLine)) {
+			if (metaCharLine == "{") {
+
+			}
+			else if (metaCharLine == "}") {
+				//finished loading meta character information, load character data from file
+				//std::cout << "finished loading folder: " << folderPath << ", info: " << infoPath << ", img: " << imagePath << "\n"; //debug
+
+				//character information
+				std::string firstName = "";
+				std::string lastName = "";
+				std::string nickname = "";
+				std::string team = "";
+
+				//character profile
+				std::string rank = "";
+				std::string prefix = "";
+				std::string suffix = "";
+				int level = 0;
+				int experience = 0;
+				bool unlocked = false;
+
+				std::ifstream charFile("characters/" + folderPath + infoPath);
+				std::string charLine;
+
+				if (charFile.is_open()) {
+					while (std::getline(charFile, charLine)) {
+						std::string charKey = charLine.substr(0, charLine.find(delimiter));
+						std::string charValue = charLine.substr(charLine.find(delimiter) + 1, charLine.length());
+
+						//std::cout << "key:" << charKey << ":" << "\nvalue:" << charValue << ":\n"; //debug
+						if (charKey == "firstName") {
+							firstName = charValue;
+						}
+						else if (charKey == "lastName") {
+							lastName = charValue;
+						}
+						else if (charKey == "nickname") {
+							nickname = charValue;
+						}
+						else if (charKey == "team") {
+							team = charValue;
+						}
+						else if (charKey == "rank") {
+							rank = charValue;
+						}
+						else if (charKey == "suffix") {
+							suffix = charValue;
+						}
+						else if (charKey == "level") {
+							level = stoi(charValue);
+						}
+						else if (charKey == "experience") {
+							experience = stoi(charValue);
+						}
+						else if (charKey == "unlocked") {
+							if (charValue == "yes" || charValue == "true") {
+								unlocked = true;
+							}
+						}
+					}
+				}
+				else {
+					std::cout << "ERROR: Cannot load character info data for into database!\n\tExpected filepath: " << "characters/" + folderPath + infoPath << "\n";
+				}
+				//finished loading character profile, load character into character database
+				Character c(firstName, lastName, nickname, team, rank, prefix, suffix, level, experience, unlocked);
+				c.setInfoPath(infoPath);
+				c.setImagePath(imagePath);
+				c.setStageSongPath(stageSongPath);
+				charMap[infoPath] = c;
+
+				//reset variables
+				firstName = "";
+				lastName = "";
+				nickname = "";
+				team = "";
+				rank = "";
+				prefix = "";
+				suffix = "";
+				level = 0;
+				experience = 0;
+				unlocked = false;
+			}
+			else {
+				int len = metaCharLine.rfind("\t") + 1;
+				std::string key = metaCharLine.substr(len, metaCharLine.find(delimiter) - len);
+				std::string value = metaCharLine.substr(metaCharLine.find(delimiter) + 1, metaCharLine.length());
+
+				//std::cout << "key:" << key << ":" << "\nvalue:" << value << ":\n\n"; //debug
+				if (key == "folderPath") {
+					folderPath = value;
+				}
+				else if (key == "infoPath") {
+					infoPath = value;
+				}
+				else if (key == "imagePath") {
+					imagePath = value;
+				}
+				else if (key == "stageSongPath") {
+					stageSongPath = value;
+				}
+			}
 		}
 	}
+	else {
+		std::cout << "FATAL ERROR: Cannot load character database!\n"; //debug
+	}
+
+	/*
+	std::cout << "charMap contents" << "\n"; //debug
+	std::unordered_map<std::string, Character>::iterator it;
+	for (it = charMap.begin(); it != charMap.end(); it++) {
+		std::cout << it->first << ":" << it->second.getLastName() << "\n";
+	}*/
+
+	//load user profile
+	Profile userProfile;
+	bool profileLoaded = false;
+	bool newProfile = false; //whether the profile was created just now
+	std::ifstream profileFile;
+
+	while (!profileLoaded) {
+		profileFile.open("profile.dat");
+		if (profileFile.is_open()) {
+			std::string line = "";
+			const std::string delimiter = ":";
+			std::string key = "";
+
+			std::string pn = "";
+			float m = 0.0;
+			Team tm;
+
+			while (std::getline(profileFile, line)) {
+				key = line.substr(0, line.find(delimiter));
+				if (key == "playerName") {
+					pn = line.substr(line.find(delimiter) + 1, line.length());
+				}
+				if (key == "money") {
+					m = stof(line.substr(line.find(delimiter) + 1, line.length()));
+				}
+				if (key == "teamName") {
+					tm.setTeamName(line.substr(line.find(delimiter) + 1, line.length()));
+				}
+				if (key == "active") {
+					while (std::getline(profileFile, line)) {
+						if (line == "{") {
+						}
+						else if (line == "}") {
+							break;
+						}
+						else {
+							std::string charName = line.substr(line.rfind("\t") + 1, line.length());
+							tm.addActiveChar(charMap[charName]);
+						}
+					}
+				}
+				if (key == "inactive") {
+					while (std::getline(profileFile, line)) {
+						if (line == "{") {
+						}
+						else if (line == "}") {
+							break;
+						}
+						else {
+							tm.addInactiveChar(charMap[line]);
+						}
+					}
+				}
+				if (key == "captain") {
+					tm.setCaptain(charMap[line.substr(line.find(delimiter) + 1, line.length())]);
+				}
+			}
+			userProfile.setPlayerName(pn);
+			userProfile.setTeam(tm);
+			userProfile.setMoney(m);
+			profileLoaded = true;
+		}
+		else {
+			//if user profile doesn't exist and we're in song selection for a stage battle, take player to profile creation screen
+			if (reason == "battle") {
+				create_profile();
+
+				newProfile = true;
+			}
+		}
+	}
+
+	//after profile, play overture
+	if (reason == "battle" && newProfile) {
+		sf::SoundBuffer sf;
+		sf.loadFromFile("sounds/battle.ogg");
+		sf::Sound s;
+		s.setBuffer(sf);
+		s.play();
+		while (s.getStatus() != 0) {
+		}
+		Stage stage("overture", 0, 0);
+		stage.setInfo("overture", "AKB48", "Team A 1st Stage -PARTY ga Hajimaru yo-", 2005);
+		Stage stage2("overture", 0, 0);
+		stage2.setInfo("overture", "AKB48", "Team A 1st Stage -PARTY ga Hajimaru yo-", 2005);
+		song_battle(&userProfile, &stage, &stage2);
+	}
+
 	//set mouse cursor to 0,0 so that we don't accidentally highlight a song right when we enter
 	sf::Mouse::setPosition(sf::Vector2i(20, 20), window);
 
@@ -1444,7 +1758,7 @@ int song_selection(std::string reason) {
 					}
 					if (unlockCount == requiredSongs.size()) {
 						unlocked = true;
-						//std::cout << "\t" << songTitle << " was unlocked!\n"; //debug
+						std::cout << songTitle << " was unlocked!\n"; //debug
 					}
 					stg.setProfile(highScore, timesPlayed, unlocked, hidden, requiredSongs);
 				}
@@ -1507,7 +1821,7 @@ int song_selection(std::string reason) {
 	hoverBox.setFillColor(sf::Color(128, 128, 128, 0)); //transparent for album art
 	hoverBox.setOutlineThickness(5);
 	hoverBox.setOutlineColor(sf::Color(255, 255, 255, 92));
-
+	
 	//initialize arrows
 	const float screenHeight = 600;
 	const float screenWidth = 800;
@@ -1743,7 +2057,7 @@ int song_selection(std::string reason) {
 								}
 								//loading_screen("sounds/battle");
 								//enter stage battle
-								if (song_battle(stage, &stageMap[(*stage).getPath()] ) > 0) {
+								if (song_battle(&userProfile, stage, &stageMap[(*stage).getPath()] ) > 0) {
 
 									for (int i = 0; i < stageList.size(); i++) {
 										Stage *it = &stageList.at(i);
@@ -1967,7 +2281,7 @@ int song_selection(std::string reason) {
 	return 0;
 }
 
-int song_battle(Stage * stage, Stage * mappedStage) {
+int song_battle(Profile * profile, Stage * stage, Stage * mappedStage) {
 	std::string filePath = (*stage).getPath();
 	const std::string fileExtension = ".ogg";
 
@@ -2082,7 +2396,16 @@ int song_battle(Stage * stage, Stage * mappedStage) {
 	sideText.setFont(gameFont);
 
 	//initialize character texture/sprite
-	sf::Texture charTexture;
+	std::deque<sf::Texture> charTextures;
+	std::deque<Character> * activeTeam = (*(*profile).getTeam()).getActiveTeam();
+
+	for (int i = 0; i < (*activeTeam).size(); i++) {
+		sf::Texture charTexture;
+		if (!charTexture.loadFromFile("characters/team_" + (*(*profile).getTeam()).getTeamName() + "/" + (*activeTeam)[i].getImagePath())) {
+			std::cout << "ERROR: Cannot load image for character " << (*activeTeam)[i].getInfoPath() << "\n";
+		}
+		charTextures.push_back(charTexture);
+	}
 	sf::Sprite charSprite;
 
 	//load beats
@@ -2195,33 +2518,77 @@ int song_battle(Stage * stage, Stage * mappedStage) {
 				highScore = contestedScore;
 			}
 
-			(*stage).setProfile(highScore, (*stage).getTimesPlayed() + 1, (*stage).getUnlocked(), (*stage).getHidden());
-			(*mappedStage).setProfile(highScore, (*stage).getTimesPlayed() + 1, (*stage).getUnlocked(), (*stage).getHidden());
+			if (score > 0) { //requirement to pass stage, may change later
+				(*stage).setProfile(highScore, (*stage).getTimesPlayed() + 1, (*stage).getUnlocked(), (*stage).getHidden());
+				(*mappedStage).setProfile(highScore, (*stage).getTimesPlayed() + 1, (*stage).getUnlocked(), (*stage).getHidden());
 
-			//std::cout << "stage high score: " << (*stage).getHighScore() << "\n";
+				//std::cout << "stage high score: " << (*stage).getHighScore() << "\n";
 
-			//do some after game stats display first before returning (manual click)
-			std::ofstream file;
-			file.open(filePath + ".dat");
-			file << "title:" << (*stage).getTitle() << "\n";
-			file << "artist:" << (*stage).getArtist() << "\n";
-			file << "album:" << (*stage).getAlbum() << "\n";
-			file << "year:" << (*stage).getYear() << "\n";
-			file << "highest_score:" << highScore << "\n";
-			file << "times_played:" << (*stage).getTimesPlayed() << "\n";
-			if ((*stage).getUnlocked()) {
-				file << "unlocked:" << "true" << "\n";
+				//do some after game stats display first before returning (manual click)
+				std::ofstream file;
+				file.open(filePath + ".dat");
+				file << "title:" << (*stage).getTitle() << "\n";
+				file << "artist:" << (*stage).getArtist() << "\n";
+				file << "album:" << (*stage).getAlbum() << "\n";
+				file << "year:" << (*stage).getYear() << "\n";
+				file << "highest_score:" << highScore << "\n";
+				file << "times_played:" << (*stage).getTimesPlayed() << "\n";
+				if ((*stage).getUnlocked()) {
+					file << "unlocked:" << "true" << "\n";
+				}
+				else {
+					file << "unlocked:" << "false" << "\n";
+				}
+				if ((*stage).getHidden()) {
+					file << "hidden:" << "true" << "\n";
+				}
+				else {
+					file << "hidden:" << "false";
+				}
+				file.close();
+
+				//update profile
+				//money
+
+				//update character data
+				std::deque<Character> * aTeam = (*(*profile).getTeam()).getActiveTeam();
+				for (int i = 0; i < (*aTeam).size(); i++) {
+					Character * c = &(*aTeam)[i];
+					
+					//calculate exp based off of score
+					(*c).incExp(score/2); //TODO, write exp system
+
+					//if exp > maxExp for that level, level character
+
+					//write character data to file
+					std::ofstream charFile;
+					charFile.open("characters/team_" + (*c).getTeam() + "/" + (*aTeam)[i].getInfoPath());
+					if (charFile.is_open()) {
+						charFile << "firstName:" << (*c).getFirstName() << "\n";
+						charFile << "lastName:" << (*c).getLastName() << "\n";
+						charFile << "nickname:" << (*c).getNickname() << "\n";
+						std::cout << "nickname: " << (*c).getNickname() << "\n";//debug
+						charFile << "team:" << (*c).getTeam() << "\n";
+						charFile << "rank:" << (*c).getRank() << "\n";
+						charFile << "prefix:" << (*c).getPrefix() << "\n";
+						charFile << "suffix:" << (*c).getSuffix() << "\n";
+						charFile << "level:" << std::to_string((*c).getLevel()) << "\n";
+						charFile << "experience:" << std::to_string((*c).getExp()) << "\n";
+						if ((*c).getUnlocked()) {
+							charFile << "unlocked:true";
+						}
+						else {
+							charFile << "unlocked:false";
+						}
+					}
+					else {
+						std::cout << "ERROR: Cannot open character data for saving. Filepath: " << "characters/team_" + (*c).getTeam() + "/" + (*aTeam)[i].getInfoPath() << "\n";
+					}
+				}
 			}
 			else {
-				file << "unlocked:" << "false" << "\n";
+				//fail stage
 			}
-			if ((*stage).getHidden()) {
-				file << "hidden:" << "true" << "\n";
-			}
-			else {
-				file << "hidden:" << "false";
-			}
-			file.close();
 
 			return score; //return score
 		}
@@ -2647,25 +3014,21 @@ int song_battle(Stage * stage, Stage * mappedStage) {
 		sideText.setCharacterSize(50);
 		window.draw(sideText);
 
-		std::string teamName = "team 4";
-		std::string charNames[5] = { "TakahashiJuri2015", "KojimaMako2015", "NishinoMiki2015", "OkadaNana2015", "OmoriMiyu2015" };
-
 		for (int i = 0; i < 5; i++) {
-			if (!charTexture.loadFromFile("characters/" + teamName + "/" + charNames[i] + ".jpg")) {
-				//error
-			}
-			charSprite.setTexture(charTexture);
+			charSprite.setTexture(charTextures[i]);
 			if (i == 0) {
+				Character * captain = (*(*profile).getTeam()).getCaptain();
+
 				charSprite.setScale(sf::Vector2f(.5, .5));
 				charSprite.setPosition(625, 100);
 
 				sideText.setCharacterSize(15);
 				//team captain's level
-				sideText.setString("Level 5");
+				sideText.setString("Level " + std::to_string((*captain).getLevel()));
 				sideText.setPosition(625, 300);
 				window.draw(sideText);
 				//team captain's name
-				sideText.setString(charNames[i]);
+				sideText.setString((*captain).getName());
 				sideText.setPosition(625, 320);
 				window.draw(sideText);
 			}

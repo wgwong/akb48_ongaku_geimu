@@ -44,19 +44,19 @@
 	path:47 Suteki na Machi e
 	level:0
 	order:0
-	required_songs:none
+	required_songs:overture
 }
 {
 	path:Kimi Dake ni Chu! Chu! Chu!
 	level:0
 	order:1
-	required_songs:none
+	required_songs:overture
 }
 {
 	path:Reborn
 	level:0
 	order:2
-	required_songs:none
+	required_songs:overture
 }
 {
 	path:Kegarete iru Shinjitsu
