@@ -24,6 +24,26 @@
 	imagePath:MogiShinobu2015.jpg
 }
 {
+	folderPath:team_k/
+	infoPath:ishida_haruka.dat
+	imagePath:IshidaHaruka2015.jpg
+}
+{
+	folderPath:team_k/
+	infoPath:nakano_ikumi.dat
+	imagePath:NakanoIkumi2015.jpg
+}
+{
+	folderPath:team_k/
+	infoPath:nakata_chisato.dat
+	imagePath:NakataShisato2015.jpg
+}
+{
+	folderPath:team_k/
+	infoPath:mukaichi_mion.dat
+	imagePath:MukaichiMion2015.jpg
+}
+{
 	folderPath:team_4/
 	infoPath:takahashi_juri.dat
 	imagePath:TakahashiJuri2015.jpg
