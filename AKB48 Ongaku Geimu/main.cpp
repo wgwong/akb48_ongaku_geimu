@@ -23,6 +23,7 @@ void split(const std::string& s, char delim, std::vector<std::string>& v);
 class Stage;
 
 int loading_screen(std::string name);
+int create_profile();
 int song_selection(std::string reason);
 int song_battle(Stage * stg, Stage * mStg);
 int song_maker(std::string name);
@@ -1091,7 +1092,236 @@ int loading_screen(std::string filePath) {
 	return 0;
 }
 
+int create_profile() {
+
+	//load background
+	sf::Texture backTexture;
+	if (!backTexture.loadFromFile("title_screen.png")) {
+		//error
+	}
+	backTexture.setSmooth(true);
+	backTexture.setRepeated(false);
+	sf::Sprite backSprite;
+	backSprite.setTexture(backTexture);
+	backSprite.setColor(sf::Color(255, 255, 255, 192)); // 3/4th transparent
+
+	//load font
+	sf::Font font;
+	font.loadFromFile("arial.ttf");
+
+	//player name variables
+	sf::RectangleShape nameBar;
+	nameBar.setSize(sf::Vector2f(300, 50));
+	nameBar.setFillColor(sf::Color(32, 32, 32, 192));
+	nameBar.setPosition((window.getSize().x - nameBar.getSize().x) / 2, (window.getSize().y - nameBar.getSize().y) / 2);
+	sf::RectangleShape nameCursor;
+	nameCursor.setSize(sf::Vector2f(2, 40)); //the line cursor that shows up when typing
+	nameCursor.setFillColor(sf::Color(224, 224, 224));
+	bool currentlyTyping = false;
+	std::string nameInputString = ""; //what the user types
+	sf::Text nameText;
+	nameText.setFont(font);
+	nameText.setCharacterSize(30);
+	nameText.setColor(sf::Color(224, 224, 224));
+	nameText.setString("Enter your name");
+	nameText.setPosition((window.getSize().x - nameBar.getLocalBounds().width) / 2, nameBar.getPosition().y + (nameBar.getSize().y - nameText.getLocalBounds().height)/2);
+
+	//team constants
+	const int numTeams = 4;
+	const std::string teamNames[4] = { "A", "K", "B", "4" };
+	std::unordered_map<std::string, sf::Color> teamColors;
+	teamColors["A"] = sf::Color(245, 156, 194, 192);
+	teamColors["K"] = sf::Color(135, 187, 45, 192);
+	teamColors["B"] = sf::Color(109, 182, 217, 192);
+	teamColors["4"] = sf::Color(255, 211, 0, 192);
+
+	//team variables
+	sf::RectangleShape teamRect;
+	teamRect.setSize(sf::Vector2f(100, 100));
+	sf::Text text;
+	text.setFont(font);
+	std::unordered_map<std::string, bool> teamHighlights; //tells us whether a team rectangle is highlighted or not, prevents default coloring before drawing
+	teamHighlights["A"] = false;
+	teamHighlights["K"] = false;
+	teamHighlights["B"] = false;
+	teamHighlights["4"] = false;
+	float teamRectSpacing = (window.getSize().x - numTeams * teamRect.getSize().x) / (numTeams + 1); //spacing between each team rectangle
+
+	//bool
+	bool nameEntered = false; //need to enter name first
+
+	sf::Clock clock; //used for the blinking rate of the name cursor
+
+	while (window.isOpen()) {
+		sf::Event event;
+
+		while (window.pollEvent(event)) {
+			if (event.type == sf::Event::Closed) {
+				window.close();
+			}
+			if (event.type == sf::Event::MouseMoved) {
+				sf::Vector2i localPos = sf::Mouse::getPosition(window);
+
+				if (nameEntered) {
+					//check if mouse is hovering over any of the team rectangles
+					for (int i = 0; i < numTeams; i++) {
+						float boxXPos = teamRectSpacing + (i * (teamRect.getSize().x + teamRectSpacing));
+						float boxYPos = (window.getSize().y - teamRect.getSize().y) / 2;
+
+						if (localPos.x >= boxXPos && localPos.x <= boxXPos + teamRect.getSize().x
+							&& localPos.y >= boxYPos && localPos.y <= boxYPos + teamRect.getSize().y) {
+							teamHighlights[teamNames[i]] = true;
+						}
+						else {
+							teamHighlights[teamNames[i]] = false;
+						}
+					}
+				}
+				else {
+
+				}
+			}
+			if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
+				sf::Vector2i localPos = sf::Mouse::getPosition(window);
+
+				if (nameEntered) {
+					//check if any of the team rectangles have been clicked
+					for (int i = 0; i < numTeams; i++) {
+						float boxXPos = teamRectSpacing + (i * (teamRect.getSize().x + teamRectSpacing));
+						float boxYPos = (window.getSize().y - teamRect.getSize().y) / 2;
+
+						if (localPos.x >= boxXPos && localPos.x <= boxXPos + teamRect.getSize().x
+							&& localPos.y >= boxYPos && localPos.y <= boxYPos + teamRect.getSize().y) {
+
+							//register username and team, save profile
+							std::ofstream file;
+							file.open("profile.dat");
+							file << "playerName:" << nameInputString << "\n";
+							file << "teamName:" << teamNames[i] << "\n";
+							file << "active:\n";
+							file << "inactive:\n";
+							file << "captain:";
+							file.close();
+
+							return 0; //return to song selection
+						}
+					}
+				}
+				else {
+					//if the nameBar was clicked, go into typing mode
+					if (localPos.x >= nameBar.getPosition().x && localPos.x <= nameBar.getPosition().x + nameBar.getSize().x
+						&& localPos.y >= nameBar.getPosition().y && localPos.y <= nameBar.getPosition().y + nameBar.getSize().y) {
+						nameBar.setFillColor(sf::Color(32, 32, 32, 224));
+						currentlyTyping = true;
+					}
+					else {
+						nameBar.setFillColor(sf::Color(32, 32, 32, 192));
+						currentlyTyping = false;
+					}
+				}
+			}
+			if (event.type == sf::Event::TextEntered) {
+				if (!nameEntered && currentlyTyping) {
+					int keyVal = event.text.unicode;
+					if (keyVal < 128) {
+						//only accept alphanumeric characters or spaces into the nameInputString
+						if (keyVal == 32 || (keyVal >= 65 && keyVal <= 90)
+							|| (keyVal >= 97 && keyVal <= 122)
+							|| (keyVal >= 48 && keyVal <= 57)) {
+							//don't append to input if it will make the text exceed the visual bounds of the name bar
+							if (nameBar.getSize().x - nameText.getLocalBounds().width > 50) {
+								nameInputString += static_cast<char>(event.text.unicode);
+							}
+						}
+						else if (keyVal == 8) {
+							//backspace, remove last character in nameInputString
+							if (nameInputString.length() > 0) {
+								nameInputString = nameInputString.substr(0, nameInputString.length() - 1);
+							}
+						}
+						else if (keyVal == 13) {
+							//carriage return/enter, if length > 0 and go to team selection mode
+							if (nameInputString.length() > 0) {
+								nameEntered = true;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		window.clear(sf::Color());
+
+		window.draw(backSprite); //draw background
+
+		if (nameEntered) {
+			//draw title
+			text.setCharacterSize(40);
+			text.setString("Select your team");
+			text.setPosition(sf::Vector2f((window.getSize().x - text.getLocalBounds().width) / 2,
+				(window.getSize().y - text.getLocalBounds().height) / 16));
+			window.draw(text);
+
+			//draw the team rectangles
+			text.setCharacterSize(30);
+			for (int i = 0; i < numTeams; i++) {
+
+				teamRect.setPosition(teamRectSpacing + (i * (teamRect.getSize().x + teamRectSpacing)), (window.getSize().y - teamRect.getSize().y) / 2);
+				if (teamHighlights[teamNames[i]]) {
+					//if mouse is hovering over the box, make it more opaque
+					sf::Color oriColor = teamColors[teamNames[i]];
+					teamRect.setFillColor(sf::Color(oriColor.r, oriColor.g, oriColor.b, 224));
+				}
+				else {
+					//otherwise, color as normal
+					teamRect.setFillColor(teamColors[teamNames[i]]);
+				}
+
+				window.draw(teamRect);
+
+				text.setString("Team " + teamNames[i]);
+				text.setPosition(int(teamRect.getPosition().x + (teamRect.getSize().x - text.getLocalBounds().width) / 2), teamRect.getPosition().y + teamRect.getSize().y);
+				window.draw(text);
+			}
+		}
+		else {
+			window.draw(nameBar);
+			if (!currentlyTyping) {
+				nameText.setString("Enter your name");
+			}
+			else {
+				nameText.setString(nameInputString);
+			}
+			nameText.setPosition((window.getSize().x - nameText.getLocalBounds().width) / 2, nameBar.getPosition().y + ((nameBar.getSize().y - nameText.getLocalBounds().height) / 2) );
+			window.draw(nameText);
+			if (currentlyTyping) {
+				nameCursor.setPosition(nameText.getPosition().x + nameText.getLocalBounds().width + 2, nameBar.getPosition().y + ((nameBar.getSize().y - nameBar.getSize().y) / 2));
+				float timeElapsed = clock.getElapsedTime().asMilliseconds() % 1000;
+				//only show the cursor every halfsecond to achieve a blinking text cursor
+				if (timeElapsed <= 500) {
+					window.draw(nameCursor);
+				}
+			}
+		}
+
+		window.display();
+	}
+
+	return 0;
+}
+
 int song_selection(std::string reason) {
+	//load user profile
+	std::ifstream profileFile;
+	profileFile.open("profile.dat");
+	if (profileFile.is_open()) {
+	}
+	else {
+		//if user profile doesn't exist and we're in song selection for a stage battle, take player to profile creation screen
+		if (reason == "battle") {
+			create_profile();
+		}
+	}
 	//set mouse cursor to 0,0 so that we don't accidentally highlight a song right when we enter
 	sf::Mouse::setPosition(sf::Vector2i(20, 20), window);
 
@@ -1114,7 +1344,7 @@ int song_selection(std::string reason) {
 	backSprite.setTexture(backTexture);
 	backSprite.setColor(sf::Color(255, 255, 255, 192)); // 3/4th transparent
 
-														//Load title text
+	//Load title text
 	sf::Text titleText;
 	titleText.setFont(gameFont);
 	titleText.setCharacterSize(50);
@@ -1124,7 +1354,8 @@ int song_selection(std::string reason) {
 	std::deque<Stage> stageList;
 	std::unordered_map<std::string, Stage> stageMap; //used by stages to reference other stages for info in O(1) lookup
 
-	std::ifstream file("song_database.txt");
+	std::ifstream file;
+	file.open("song_database.dat");
 	std::string line;
 
 	if (file.is_open()) {
@@ -1266,7 +1497,7 @@ int song_selection(std::string reason) {
 	sf::Texture thumbTexture;
 	sf::Sprite thumbSprite;
 	sf::Text thumbText;
-	
+
 	//since song box border colors are randomized,
 	//the makeshift solution of highlighting the border colors
 	//involves using a single hover box that gets drawn over any song boxes that the mouse is hovering over
