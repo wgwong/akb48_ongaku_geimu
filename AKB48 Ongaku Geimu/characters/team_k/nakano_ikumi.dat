@@ -8,3 +8,9 @@ suffix:
 level:5
 experience:0
 unlocked:false
+unlockRequirement:
+{
+	song:Kegarete iru Shinjitsu
+}
+unlockMethod:battle
+unlockValue:
